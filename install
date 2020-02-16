@@ -79,10 +79,14 @@ fi
 
 # So we don't run out of memory
 decho "Enabling swap file for install only..."
-fallocate -l 1G /swapfile >> $LOG_FILE 2>&1
-chmod 600 /swapfile >> $LOG_FILE 2>&1
-mkswap /swapfile >> $LOG_FILE 2>&1
-swapon /swapfile >> $LOG_FILE 2>&1
+if [ -e "/swapfile" ]; then
+    decho "File exists... skipping"
+else
+    fallocate -l 1G /swapfile >> $LOG_FILE 2>&1
+    chmod 600 /swapfile >> $LOG_FILE 2>&1
+    mkswap /swapfile >> $LOG_FILE 2>&1
+    swapon /swapfile >> $LOG_FILE 2>&1
+fi
 
 IP=$(ifconfig eth0 | grep "inet" | grep -v "inet6" | awk -F: '{print $2}' | awk '{print $1}')
 
@@ -93,6 +97,7 @@ apt update >> $LOG_FILE 2>&1
 
 decho "Installing necessary packages..."
 apt install nodejs python-minimal build-essential supervisor postgresql libpq-dev -y -q >> $LOG_FILE 2>&1
+apt update >> $LOG_FILE 2>&1
 
 decho "Installing latest npm package manager for node..."
 retry 3 npm -g --unsafe-perm install npm@5  >> $LOG_FILE 2>&1
