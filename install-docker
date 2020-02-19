@@ -78,15 +78,15 @@ if [ "$release" != "16.04" ] || [ "$processor" != "x86_64" ]; then
 fi
 
 # So we don't run out of memory
-decho "Enabling swap file for install only..."
-if [ -e "/swapfile" ]; then
-    decho "File exists... skipping"
-else
-    fallocate -l 1G /swapfile >> $LOG_FILE 2>&1
-    chmod 600 /swapfile >> $LOG_FILE 2>&1
-    mkswap /swapfile >> $LOG_FILE 2>&1
-    swapon -v /swapfile >> $LOG_FILE 2>&1
-fi
+#decho "Enabling swap file for install only..."
+#if [ -e "/swapfile" ]; then
+#    decho "File exists... skipping"
+#else
+#    fallocate -l 1G /swapfile >> $LOG_FILE 2>&1
+#    chmod 600 /swapfile >> $LOG_FILE 2>&1
+#    mkswap /swapfile >> $LOG_FILE 2>&1
+#    swapon -v /swapfile >> $LOG_FILE 2>&1
+#fi
 
 IP=$(ifconfig eth0 | grep "inet" | grep -v "inet6" | awk -F: '{print $2}' | awk '{print $1}')
 
@@ -114,6 +114,7 @@ MNEMONIC=$(bip39 $SEED)
 echo "$MNEMONIC" > $MNEMONIC_FILE
 
 decho "Creating postgres user..."
+/etc/init.d/postgresql restart >> $LOG_FILE 2>&1
 POSTGRES_PW=$(hkdf postgres-pw $SEED)
 su -l postgres >> $LOG_FILE 2>&1 <<EOF
   psql -c "CREATE ROLE lamassu_pg WITH LOGIN SUPERUSER PASSWORD '$POSTGRES_PW';"
@@ -252,8 +253,8 @@ EOF
 
 service supervisor restart >> $LOG_FILE 2>&1
 
-decho "Disabling swap file..."
-swapoff /swapfile >> $LOG_FILE 2>&1
+#decho "Disabling swap file..."
+#swapoff /swapfile >> $LOG_FILE 2>&1
 
 # disable exiting on error in case DO changes motd scripts
 set +e
