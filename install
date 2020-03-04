@@ -88,7 +88,11 @@ else
     swapon -v /swapfile >> $LOG_FILE 2>&1
 fi
 
-IP=$(ifconfig eth0 | grep "inet" | grep -v "inet6" | awk -F: '{print $2}' | awk '{print $1}')
+# For DigitalOcean this line will work
+# IP=$(ifconfig eth0 | grep "inet" | grep -v "inet6" | awk -F: '{print $2}' | awk '{print $1}')
+# For AWS ec2 this will work
+IP=$(TOKEN=`curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` \
+&& curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/public-ipv4)
 
 decho "Updating system..."
 sleep 10
